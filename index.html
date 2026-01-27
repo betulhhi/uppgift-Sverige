@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="se">
+<head>
+    <title>SR kanaler</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Oswald:400,300,700' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Play:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="css/styles.css" type="text/css">
+</head>
+
+<body>
+    <header id="mainheader">
+        <div class="contain">
+            <h1 id="logo">Sveriges Radio Multi Application</h1>
+
+            <div id="search">
+                <select id="searchProgram" class="form-control"></select>
+                <label for="searchbutton">
+                    <button id="searchbutton" class="btn btn-primary">Visa programtablå</button>
+                </label>
+            </div>
+            <!-- /#search -->
+        </div>
+        <!-- /.contain -->
+    </header>
+
+    <div class="container">
+        <h2>SR kanallista</h2>
+
+        <div class="left">
+            <section class="lan">
+                <h3>Bläddra kanallista</h3>
+                <nav id="mainnav">
+                    <ul id="mainnavlist" style="list-style-type: none"></ul>
+               </nav>
+            </section>
+            <!-- /#channels -->
+        </div>
+        <!-- /.left -->
+
+        <div class="right">
+            <div id="info"></div>
+            <!-- /#info -->
+        </div>
+        <!-- /.right -->
+
+        <footer>
+        </footer>
+    </div>
+    <!-- /.container -->
+
+    <script src="js/main.js" defer></script>
+</body>
+
+</html>
