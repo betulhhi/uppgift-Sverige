@@ -8,7 +8,6 @@ const infoEl = document.getElementById("info");
 const programSelectEl = document.getElementById("searchProgram");
 const showScheduleBtn = document.getElementById("searchbutton");
 
-// skapa audio-spelare om den inte finns
 let audioPlayer = document.querySelector("audio");
 if (!audioPlayer) {
   audioPlayer = document.createElement("audio");
@@ -43,7 +42,6 @@ async function getChannel(id) {
   return fetchJson(`${API_BASE}/channels/${id}?format=json`);
 }
 
-/* ====== HÄR ÄR NYA LISTAN MED LOGGOR ====== */
 function renderChannelList(data) {
   channelListEl.innerHTML = data.channels
     .map(c => `
@@ -57,7 +55,7 @@ function renderChannelList(data) {
     .join("");
 }
 
-// ---------------- PLAYLIST (LÅTAR) ----------------
+// ---------------- PLAYLIST ----------------
 
 async function getPlaylist(channelId) {
   return fetchJson(`${API_BASE}/playlists/rightnow?channelid=${channelId}&format=json`);
@@ -87,7 +85,7 @@ function renderPlaylist(data) {
   `);
 }
 
-// ---------------- PROGRAM ----------------
+// ---------------- PROGRAM (selectbox) ----------------
 
 async function getPrograms(channelId) {
   return fetchJson(`${API_BASE}/programs?channelid=${channelId}&format=json&size=100`);
@@ -101,40 +99,58 @@ function renderPrograms(data) {
       `<option value="${p.id}">${escapeHtml(p.name)}</option>`
     );
   });
+
+  // reset select när kanal byts
+  programSelectEl.selectedIndex = 0;
 }
 
-// ---------------- TABLÅ ----------------
+// ---------------- TABLÅ (endast idag) ----------------
 
 async function getSchedule(channelId) {
-  return fetchJson(`${API_BASE}/scheduledepisodes?channelid=${channelId}&format=json&size=40`);
+  return fetchJson(`${API_BASE}/scheduledepisodes?channelid=${channelId}&format=json&size=60`);
 }
 
 function renderSchedule(data) {
   const list = data.schedule;
-  infoEl.innerHTML = "<h3>Programtablå</h3>";
+  infoEl.innerHTML = "<h3>Dagens program</h3>";
+
+  const today = new Date();
+  const d = today.getDate();
+  const m = today.getMonth();
+  const y = today.getFullYear();
+
+  let found = false;
 
   list.forEach(ep => {
     const start = new Date(parseInt(ep.starttimeutc.replace(/\D/g, "")));
-    const end = new Date(parseInt(ep.endtimeutc.replace(/\D/g, "")));
 
-    infoEl.insertAdjacentHTML("beforeend", `
-      <article>
-        <h4>${escapeHtml(ep.title)}</h4>
-        <p>${start.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
-        -
-        ${end.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p>
-        <p>${escapeHtml(ep.description || "")}</p>
-      </article>
-    `);
+    if (start.getDate() === d && start.getMonth() === m && start.getFullYear() === y) {
+
+      found = true;
+
+      const end = new Date(parseInt(ep.endtimeutc.replace(/\D/g, "")));
+
+      infoEl.insertAdjacentHTML("beforeend", `
+        <article>
+          <h4>${escapeHtml(ep.title)}</h4>
+          <p>${start.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+          -
+          ${end.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p>
+          <p>${escapeHtml(ep.description || "")}</p>
+        </article>
+      `);
+    }
   });
 
-  // behåll spelaren
+  if (!found) {
+    infoEl.insertAdjacentHTML("beforeend", `<p>Ingen sändning hittades för idag.</p>`);
+  }
+
   infoEl.prepend(audioPlayer);
 }
 
 // ---------------- HÄNDELSER ----------------
 
-// klick på kanal
 channelListEl.addEventListener("click", async e => {
   const li = e.target.closest("li[data-id]");
   if (!li) return;
@@ -147,7 +163,6 @@ channelListEl.addEventListener("click", async e => {
   const channelData = await getChannel(id);
   const channel = channelData.channel;
 
-  // kanalinfo + bild
   infoEl.innerHTML = `
     <div style="display:flex; align-items:center; gap:15px;">
       <img src="${channel.image}" alt="${escapeHtml(channel.name)}"
@@ -159,7 +174,6 @@ channelListEl.addEventListener("click", async e => {
     </div>
   `;
 
-  // koppla radio (ingen autoplay)
   if (channel.liveaudio?.url) {
     audioPlayer.src = channel.liveaudio.url;
     audioPlayer.load();
@@ -167,18 +181,18 @@ channelListEl.addEventListener("click", async e => {
 
   infoEl.prepend(audioPlayer);
 
-  // hämta låtar
+  // playlist
   try {
     const playlist = await getPlaylist(id);
     renderPlaylist(playlist);
   } catch {}
 
-  // programlista
+  // programs till selectbox
   const programs = await getPrograms(id);
   renderPrograms(programs);
 });
 
-// visa tablån
+// visa tablå
 showScheduleBtn.addEventListener("click", async () => {
   if (!currentChannelId) {
     infoEl.innerHTML = "<p>Välj en kanal först.</p>";
